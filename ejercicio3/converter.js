@@ -6,14 +6,59 @@ class Currency {
 }
 
 class CurrencyConverter {
-    constructor() {}
+    constructor() {
+        this.apiUrl = 'https://api.frankfurter.app';
+        this.currencies = [];
+    }
 
-    getCurrencies(apiUrl) {}
+    
+    //getCurrencies(apiUrl) {}
+    async getCurrencies() {
+    const endpoint = 'https://api.frankfurter.app/currencies';
 
-    convertCurrency(amount, fromCurrency, toCurrency) {}
+    try {
+        const response = await fetch(endpoint);
+
+        if (!response.ok) {
+            throw new Error('Respuesta incorrecta');
+        }
+
+        const data = await response.json();
+
+        this.currencies = [];
+
+        for (const code in data) {
+            if (data.hasOwnProperty(code)) {
+                this.currencies.push(new Currency(code));
+            }
+        }
+    } catch (error) {
+        console.error('Error al obtener monedas:', error);
+    }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+    //convertCurrency(amount, fromCurrency, toCurrency) {}
+
+    async convertCurrency(amount, fromCurrency, toCurrency) {
+        if (fromCurrency.code === toCurrency.code) {
+            // Si las monedas son iguales, no convertimos.
+            return amount;
+        }
+
+        try {
+            const response = await fetch(`${this.apiUrl}/latest?amount=${amount}&from=${fromCurrency.code}&to=${toCurrency.code}`);
+            const data = await response.json();
+
+            // Retornamos el monto convertido
+            return data.rates[toCurrency.code] * amount;
+        } catch (error) {
+            console.error('Error al convertir la moneda:', error);
+            return null;
+        }
+    }
+}
+
+    document.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("conversion-form");
     const resultDiv = document.getElementById("result");
     const fromCurrencySelect = document.getElementById("from-currency");
